@@ -1,27 +1,29 @@
 import asyncio
 import websockets
 import json
-import hashlib
-import os
 
-def calculate_hash():
-    # https://stackoverflow.com/questions/22058048/hashing-a-file-in-python
-    hash = hashlib.new('sha256')
-    buffsize = 65536
-    with open(os.path.realpath(__file__), "rb") as file:
-        while True:
-            data = file.read(buffsize)
-            if not data:
-                break
-            hash.update(data)
-    return hash.hexdigest()
+from Cryptodome.Cipher import AES
+import base64
+
+
+key = b"918005185E36C9888E262165401C812F"
+async def encrypt_data(data):
+    cipher = AES.new(key, AES.MODE_EAX)
+    ciphertext, tag = cipher.encrypt_and_digest(bytes(data, 'utf-8'))
+    send_data = cipher.nonce + tag + ciphertext
+    return send_data
+
+
 
 async def handler(websocket):
     async for message in websocket:
         msg = json.loads(message)
         print(msg)
         if (msg["type"] == "request"):
-            await websocket.send(json.dumps({"type": "prove", "data": "<prove data hier>", "challenge": msg["challenge"], "digest": calculate_hash()}))
+            encrypted_data = await encrypt_data("permissions.json")
+            encoded = base64.b64encode(encrypted_data)
+            json_object = json.dumps({"type": "prove", "data": encoded.decode('ascii')})
+            await websocket.send(json_object)
 
 
 async def connect_to_server(host, port):
