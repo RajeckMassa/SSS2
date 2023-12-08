@@ -5,6 +5,8 @@ import hashlib
 from Cryptodome.Cipher import AES
 import base64
 
+checks = []
+
 
 async def create_md5_from_file(file_name):
     hash_md5 = hashlib.md5()
@@ -12,6 +14,11 @@ async def create_md5_from_file(file_name):
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
+
+async def generate_checksums():
+    while True:
+        checks.append(await create_md5_from_file("supersecret/permission.json"))
+        await asyncio.sleep(1)
 
 key = b"918005185E36C9888E262165401C812F"
 async def encrypt_data(data):
@@ -22,14 +29,27 @@ async def encrypt_data(data):
 
 async def handler(websocket):
     async for message in websocket:
+        print(checks)
         msg = json.loads(message)
         print(msg)
         if (msg["type"] == "request"):
-            hash = await create_md5_from_file("supersecret/permission.json")
-            encrypted_data = await encrypt_data(hash)
-            encoded = base64.b64encode(encrypted_data)
-            json_object = json.dumps({"type": "prove", "data": encoded.decode('ascii')})
+            num_of_checks = len(checks)
+            res = {
+                "type": "prove",
+                "num_of_checks": num_of_checks
+            }
+            for i in range(0, num_of_checks):
+                hash = checks[i]
+                encrypted_data = await encrypt_data(hash)
+                encoded = base64.b64encode(encrypted_data)
+                res[str(i)] = encoded.decode('ascii')
+            checks.clear()
+            json_object = json.dumps(res)
             await websocket.send(json_object)
+        elif (msg["type"] == "abort"):
+            print("* Abort message received -- cancel program!")
+            await websocket.close()
+            exit(0)
 
 
 async def connect_to_server(host, port):
@@ -40,8 +60,10 @@ async def connect_to_server(host, port):
         json_data = json.dumps(data)
         await asyncio.gather(
             ws.send(json_data),
-            handler(ws)
+            handler(ws),
+            generate_checksums()
         )
+        print("a?")
 
 
 if __name__ == "__main__":

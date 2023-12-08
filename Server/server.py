@@ -15,7 +15,7 @@ import base64
 
 connections = set()
 key = b"918005185E36C9888E262165401C812F"
-md5_key = "c956cf3a2146ff17fcedb1a7e5fbf969"
+md5_key = "6f498c561258ca2185bea1fbc5eb43ed"
 
 
 async def decrypt_message(encrypted_message):
@@ -31,13 +31,16 @@ async def decrypt_message(encrypted_message):
 async def handle_prove_data(websocket):
     msg = json.loads(await websocket.recv())
     if msg["type"] == "prove":
-        encoded_encrypted_data = msg["data"]
-        encrypted_data = base64.b64decode(encoded_encrypted_data)
-        decrypted_data = await decrypt_message(encrypted_data)
-        if decrypted_data == md5_key:
-            print("Success")
-        else:
-            print("tampered with!")
+        num = msg["num_of_checks"]
+        for i in range(0, num):
+            encoded_encrypted_data = msg[str(i)]
+            encrypted_data = base64.b64decode(encoded_encrypted_data)
+            decrypted_data = await decrypt_message(encrypted_data)
+            if decrypted_data != md5_key:
+                print("* Tampered with! Sending abort msg")
+                data = json.dumps({"type": "abort"})
+                await websocket.send(data)
+
 
 
 
