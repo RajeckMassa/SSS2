@@ -15,8 +15,7 @@ import base64
 
 connections = set()
 key = b"918005185E36C9888E262165401C812F"
-# TODO: Make this an MD5 key
-md5_key = "permissions.json"
+md5_key = "c956cf3a2146ff17fcedb1a7e5fbf969"
 
 
 async def decrypt_message(encrypted_message):
@@ -38,7 +37,7 @@ async def handle_prove_data(websocket):
         if decrypted_data == md5_key:
             print("Success")
         else:
-            print("tampered with!", decrypted_data)
+            print("tampered with!")
 
 
 
