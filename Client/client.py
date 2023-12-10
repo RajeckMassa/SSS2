@@ -41,6 +41,9 @@ async def create_checksum(file_name):
         hash_md5.update(device.encode('utf-8'))
     return hash_md5.hexdigest()
 
+# loop for generating checksums in the ERASMUS-style
+# create a 'check' every second, send the list to the verifier
+# verifier verifies every check
 async def generate_checksums():
     if not erasmus:
         return
@@ -55,6 +58,7 @@ async def encrypt_data(data):
     send_data = cipher.nonce + tag + ciphertext
     return send_data
 
+# Generate the response in ERASMUS-style
 async def generate_erasmus_response():
     num_of_checks = len(checks)
     res = {
@@ -69,6 +73,7 @@ async def generate_erasmus_response():
     checks.clear()
     return json.dumps(res)
 
+# Generate the response in the 'original'-style
 async def generate_original_response():
     current_md5_checksum = await create_checksum("supersecret/permission.json")
     encrypted_data = await encrypt_data(current_md5_checksum)
@@ -84,14 +89,15 @@ async def handler(websocket):
     global connected
     async for message in websocket:
         msg = json.loads(message)
-        if (msg["type"] == "request"):
+        # check type of request
+        if msg["type"] == "request":
             print("* Received verify request from server")
-            if (erasmus):
+            if erasmus:
                 json_object = await generate_erasmus_response()
             else:
                 json_object = await generate_original_response()
             await websocket.send(json_object)
-        elif (msg["type"] == "abort"):
+        elif msg["type"] == "abort":
             print("* Abort message received -- cancel program!")
             await websocket.close()
             connected = False
