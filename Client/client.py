@@ -106,13 +106,15 @@ async def handler(websocket):
             print("* Succeed message received -- keep running")
 
 
-async def connect_to_server(host, port):
+async def connect_to_server(port):
     global connected
     global erasmus
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--erasmus", action=argparse.BooleanOptionalAction, default=True, help="ERASMUS or 'simple' mode")
+    parser.add_argument("-ip", "--ipadress", type=str, default="127.0.0.1", help="IP adress of server.")
     args = parser.parse_args()
     erasmus = args.erasmus
+    host = args.ipadress
     url = "ws://" + host + ":" + str(port)
     async with websockets.connect(url) as ws:
         connected = True
@@ -129,4 +131,4 @@ async def connect_to_server(host, port):
 
 
 if __name__ == "__main__":
-    asyncio.run(connect_to_server("localhost", 5555))
+    asyncio.run(connect_to_server(5555))
