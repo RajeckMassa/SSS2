@@ -7,7 +7,7 @@ import argparse
 import socket
 
 
-# This part of code is obtained from
+# This code is obtained from
 # https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib?page=1&tab=scoredesc#tab-top
 async def get_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -23,11 +23,12 @@ async def get_ip():
 
 connections = set()
 # (not so) Secret AES key
+# This is still included in the repo for the demo
+# In production, you should never push an encryption key
+# to Git, but use something like environment variables.
 key = b"918005185E36C9888E262165401C812F"
 # MD5 key which the client should return
-# Key RPI: 269484c03998ee530c9c76b1ffccfc94
-# Key mac 6a4ae8f4ea95bf0018c3f6185a498c7b
-md5_key = "269484c03998ee530c9c76b1ffccfc94"
+md5_key = ""
 time_between_verifies = 0
 
 # Decrypt the messages
@@ -62,8 +63,6 @@ async def handle_prove_data(websocket):
         print(f"* All good on client {websocket.id}, sending succeed msg")
         data = json.dumps({"type": "succeed"})
         await websocket.send(data)
-
-
 
 
 async def prove_request(websocket):
@@ -105,5 +104,20 @@ async def main(port):
         print("* Server started on " + host + ":" + str(port))
         await asyncio.Future()
 
+# Obtain the hash from the file
+# Exception handling from
+# https://stackoverflow.com/questions/713794/catching-an-exception-while-using-a-python-with-statement
+def obtain_hash():
+    global md5_key
+    try:
+        hash_file = open("hash.txt", 'r')
+    except FileNotFoundError:
+        raise Exception("Please create the hash.txt file first.")
+    else:
+        with hash_file:
+            md5_key = hash_file.readline().strip()
+            hash_file.close()
+
 if __name__ == "__main__":
+    obtain_hash()
     asyncio.run(main(5555))

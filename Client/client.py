@@ -15,7 +15,9 @@ checks = []
 jobs = []
 connected = False
 erasmus = True
-# (Not so) private key, change this for production
+# This is still included in the repo for the demo
+# In production, you should never push an encryption key
+# to Git, but use something like environment variables.
 key = b"918005185E36C9888E262165401C812F"
 
 # Function to obtain the USB vendor + device ID to generate an unique ID
