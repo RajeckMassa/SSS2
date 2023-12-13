@@ -3,7 +3,6 @@ import websockets
 import json
 import secrets
 import hashlib
-import os
 from Cryptodome.Cipher import AES
 import base64
 
@@ -15,11 +14,18 @@ import base64
 
 connections = set()
 key = b"918005185E36C9888E262165401C812F"
-md5_key = "6f498c561258ca2185bea1fbc5eb43ed"
+# md5_key = "6f498c561258ca2185bea1fbc5eb43ed"
+md5_key = "f3bb18fb74beb2b988c04aaed3a3210a"
 
+recent_nonces = []
 
 async def decrypt_message(encrypted_message):
     nonce = encrypted_message[:16]
+    if (nonce in recent_nonces):
+        data = json.dumps({"type": "abort"})
+    recent_nonces.append(nonce)
+    if (len(recent_nonces) > 10):
+        recent_nonces.pop(0)
     tag = encrypted_message[16:32]
     msg = encrypted_message[32:]
 

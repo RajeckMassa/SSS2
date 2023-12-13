@@ -4,9 +4,10 @@ import json
 import hashlib
 from Cryptodome.Cipher import AES
 import base64
+import os
 
 checks = []
-
+checkdata = []
 
 async def create_md5_from_file(file_name):
     hash_md5 = hashlib.md5()
@@ -16,8 +17,13 @@ async def create_md5_from_file(file_name):
     return hash_md5.hexdigest()
 
 async def generate_checksums():
+    path = os.path.dirname(os.path.realpath(__file__));
+    path += "/supersecret/permission.json";
     while True:
-        checks.append(await create_md5_from_file("supersecret/permission.json"))
+        #checks.append(await create_md5_from_file(path))
+        check = await create_md5_from_file(path);
+        checks.append(check)
+        checkdata.append(await encrypt_data(check))
         await asyncio.sleep(1)
 
 key = b"918005185E36C9888E262165401C812F"
@@ -29,7 +35,6 @@ async def encrypt_data(data):
 
 async def handler(websocket):
     async for message in websocket:
-        print(checks)
         msg = json.loads(message)
         print(msg)
         if (msg["type"] == "request"):
@@ -39,11 +44,13 @@ async def handler(websocket):
                 "num_of_checks": num_of_checks
             }
             for i in range(0, num_of_checks):
-                hash = checks[i]
-                encrypted_data = await encrypt_data(hash)
+                #hash = checks[i]
+                #encrypted_data = await encrypt_data(hash)
+                encrypted_data = checkdata[i]
                 encoded = base64.b64encode(encrypted_data)
                 res[str(i)] = encoded.decode('ascii')
             checks.clear()
+            checkdata.clear()
             json_object = json.dumps(res)
             await websocket.send(json_object)
         elif (msg["type"] == "abort"):
