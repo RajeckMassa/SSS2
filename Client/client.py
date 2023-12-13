@@ -51,7 +51,7 @@ async def generate_checksums():
         return
     while connected:
         hash = await create_checksum("supersecret/permission.json")
-        checks.append(encrypted_data = await encrypt_data(hash))
+        checks.append(await encrypt_data(hash))
         await asyncio.sleep(1)
 
 # Encrypt the data using AES

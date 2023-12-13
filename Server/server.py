@@ -50,7 +50,7 @@ async def decrypt_message(encrypted_message):
 async def handle_prove_data(websocket):
     msg = json.loads(await websocket.recv())
     if msg["type"] == "prove":
-        print(f"Client {websocket.id} sends data to verify.")
+        print(f"* Client {websocket.id} sends data to verify.")
         # Obtain the number of checks
         num = msg["num_of_checks"]
         # Loop through them, decode them, check them
