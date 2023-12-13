@@ -35,8 +35,8 @@ recent_nonces = []
 
 async def decrypt_message(encrypted_message):
     nonce = encrypted_message[:16]
-    if (nonce in recent_nonces):
-        data = json.dumps({"type": "abort"})
+    if nonce in recent_nonces:
+        return ""
     recent_nonces.append(nonce)
     if (len(recent_nonces) > 10):
         recent_nonces.pop(0)
